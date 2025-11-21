@@ -24,10 +24,17 @@ graficas_gfr_vs_rod/
 graficas_rod_gfr/
 images_graficas/
 tablas_af/
+tablas_af_legacy/
 resultados_fuerza/
 validation_results/
 Ariticulo/
-
+up_drive/
+output/
+notebooks/analisis.ipynb
+notebooks/data.ipynb
+notebooks/data_articular_f.ipynb
+notebooks/data_analisis.ipynb
+config/
 # Archivos grandes que no deben estar en el repo
 *.mat
 *.xlsx
@@ -35,9 +42,6 @@ Ariticulo/
 *.png
 *.json
 
-# Excepciones: mantener algunos archivos importantes si es necesario
-# !readme.md
-# !requirements.txt
 
 # Entornos virtuales
 up_drive/.venv/
