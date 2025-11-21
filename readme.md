@@ -1,83 +1,267 @@
-# Muscle-driven simulations with OpenSimAD
+# Force Plate Integration with OpenCap
 
-The examples we provide to generate muscle-driven simulations use OpenSimAD, which is a custom version of OpenSim that supports automatic differentiation (AD). AD is an alternative to finite differences to compute derivatives that is faster in most cases. You can find more details about OpenSimAD and some benchmarking against finite differences in [this publication](https://journals.plos.org/plosone/article/comments?id=10.1371/journal.pone.0217730). Please keep in mind that OpenSimAD does not support all features of OpenSim, you should therefore carefully verify what you are doing should you diverge from the provided examples (eg, if you use a different musculoskeletal model). We will contribute examples to generate muscle-driven simulations using Moco in the near future, which will make it easier to use different OpenSim models.
+## Overview
 
-OpenSimAD requires compiling C++ and C code. Everything is automated, but please follow the [specific install requirements](https://github.com/stanfordnmbl/opencap-processing#install-requirements-to-run-muscle-driven-simulations) to make sure you have everything you need (CMake and compiler).
+This project provides tools for synchronizing force plate data with kinematic data from OpenCap. The main objective is to integrate temporal and spatial force plate measurements with OpenCap's marker-based motion capture system, enabling comprehensive biomechanical analysis.
 
-### Getting started running muscle-driven simulations
-We recommend starting with `example_kinetics.py` to see how to run dynamic simulations using this repository. The below documentation provides further details about the simulations.
+## Main Objective
 
-### Overview of the pipeline for muscle-driven simulations
-1. **Process inputs**
-  - [Download the model and the motion file](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/utilsOpenSimAD.py#L1912) with the coordinate values estimated from videos.
-  - [Adjust the wrapping surfaces](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/utilsOpenSimAD.py#L1917) of the model to enforce meaningful moment arms (ie, address known bug of wrapping surfaces).
-  - [Add contact spheres](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/utilsOpenSimAD.py#L1919) to the musculoskeletal model to model foot-ground interactions.
-  - [Generate differentiable external function](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/utilsOpenSimAD.py#L1921) to leverage AD when solving the optimal control problem.
-    - More details about this process in [this publication](https://journals.plos.org/plosone/article/comments?id=10.1371/journal.pone.0217730) and [this repository](https://github.com/antoinefalisse/opensimAD).
-2. **Fit polynomials to approximate muscle-tendon lenghts and velocities, and moment arms.**
-  - We use polynomial approximations of coordinates values to estimate muscle-tendon lenghts and velocities, and moment arms. We [fit the polynomial coefficients](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/mainOpenSimAD.py#L541) before solving the optimal control problem. Using polynomial approximations speeds up evaluations of muscle-tendon lenghts and velocities, and moment arms.
-3. **Solve optimal control / trajectory optimization problem**
-- We generate [muscle-driven simulations](https://github.com/stanfordnmbl/opencap-processing/blob/main/UtilsDynamicSimulations/OpenSimAD/mainOpenSimAD.py#L999) that track joint kinematics. The general idea is to solve for the model controls that will drive the musculoskeletal model to closely track the measured kinematics while satisfying the dynamic equations describing muscle and skeletal dynamics and minimizing muscle effort. We use direct collocation methods to solve this problem, and leverage AD through [CasADi](https://web.casadi.org/).
-4. **Process results**
-- From the simulations, we can extract dynamic variables like muscle forces, joint moments, ground reaction forces, or joint contact forces.
+The primary goal of this system is to **synchronize OpenCap kinematic data with force plate measurements**, allowing researchers to combine:
+- **Kinematic data** from OpenCap (marker positions, joint angles, etc.)
+- **Kinetic data** from force plates (ground reaction forces, moments, center of pressure)
 
-### Overview outputs
-- If your problem converges, you should get a few files under OpenSimData/Dynamics:
-  - forces_<trial_name>.mot
-    - Muscle forces and non muscle-driven joint torques (eg, reserve actuators).
-  - GRF_resultant_<trial_name>.mot
-    - Resultant ground reaction forces and moments.
-  - GRF_<trial_name>.mot
-    - Ground reaction forces and moments (per contact sphere).
-  - kinematics_activations_<trial_name>.mot
-    - Joint kinematics and muscle activations.
-  - kinetics_<trial_name>.mot
-    - Net joint moments.
-  - optimaltrajectories.npy
-    - Dictionary with compiled results:
-      - time: discretized time vector.
-      - coordinate_values_toTrack: reference coordinate values estimated from videos.
-      - coordinate_values: coordinate values resulting from the dynamic simulation.
-      - coordinate_speeds_toTrack: reference coordinate speeds estimated from videos.
-      - coordinate_speeds: coordinate speeds resulting from the dynamic simulation.
-      - coordinate_accelerations_toTrack: reference coordinate accelerations estimated from videos.
-      - coordinate_accelerations: coordinate accelerations resulting from the dynamic simulation.
-      - torques: joint torques/moments from the dynamic simulation.
-      - torques_BWht: joint torques/moments normalized by body weight times height from the dynamic simulation.
-      - GRF: resultant ground reaction forces from the dynamic simulation.
-      - GRF_BW: resultant ground reaction forces normalized by body weight from the dynamic simulation.
-      - GRM: resultant ground reaction moments from the dynamic simulation, expressed with respect to global reference frame.
-      - GRM_BWht: resultant ground reaction moments normalized by body weight times height from the dynamic simulation.
-      - muscle_activations: muscle activations from the dynamic simulation.
-      - passive_muscle_torques: passive torque contribution of the muscles from the dynamic simulation.
-      - active_muscle_torques: active torque contribution of the muscles from the dynamic simulation.
-      - passive_limit_torques: torque contributions from limit torques from the dynamic simulation.
-      - KAM: knee adduction moments from the dynamic simulation.
-      - KAM_BWht: knee adduction moments normalized by body weight times height from the dynamic simulation.
-      - MCF: medial knee contact forces from the dynamic simulation.
-      - MCF_BW: medial knee contact forces normalized by body weight from the dynamic simulation.
-      - coordinates: coordinate names.
-      - rotationalCoordinates: rotational coordinate names.
-      - GRF_labels: ground reaction force names.
-      - muscles: muscle names.
-      - muscle_driven_joints: muscle-driven coordinate names.
-      - limit_torques_joints : names of coordinates with limit torques.
-      - KAM_labels: labels of knee adduction moments.
-      - MCF_labels: labels of medial knee contact fprces.
-      - iter_count: number of iterations the problem took to converge.
+This synchronization enables comprehensive biomechanical analysis including inverse dynamics calculations in OpenSim.
 
-### Overview files
-- `boundsOpenSimAD.py`: script describing the bounds of the problem variables.
-- `functionCasADiOpenSimAD.py`: various helper CasADi functions.
-- `initialGuessOpenSimAD.py`: script describing the initial guess of the problem variables.
-- `mainOpenSimAD.py`: main script formulating and solving the problem.
-- `muscleDataOpenSimAD.py`: various helper functions related to muscle models.
-- `muscleModelOpenSimAD.py`: implementation of the [DeGrooteFregly](https://pubmed.ncbi.nlm.nih.gov/27001399/) muscle model.
-- `plotsOpenSimAD.py`: helper plots for intermediate visualization.
-- `polynomialsOpenSimAD.py`: script to fit polynomial coefficients.
-- `settingsOpenSimAD.py`: settings for the problem with pre-defined settings for simulating different activities.
-- `utilsOpenSimAD.py`: various utilities for OpenSimAD.
+## Quick Start
 
-### Food for thought / Tips & Tricks
+The main script to execute is **`scripts/batch_process_forceplates.py`**, which processes multiple participants and movements automatically.
 
-Dynamic simulations of human movement require solving complex optimal control problems. **It is a tedious task with no guarantee of success.** Even if the problem converges (*optimal solution found*), you should always verify that the results are biomechanically meaningful. It is possible that the problem satisfied all constraints but did not converge to the expected solution. You might want to play with the settings (eg, weights of the different terms in the cost function), constraints, and cost function terms to generate simulations that make sense for the particular activity you are interested in. We have gathered some [tips and tricks](https://docs.google.com/document/d/1zgF9PqOaSZHma3vdQnccHz6mc7Fv6AG3fHLNLh4TQuA/edit) in this document.
+## Step-by-Step Workflow
+
+### Step 1: Preprocess Force Plate Files
+
+Before processing, force plate files must be preprocessed using the Jupyter notebook:
+
+**`notebooks/plataformas_fuerza.ipynb`**
+
+This notebook:
+- Processes raw force plate data files
+- Standardizes column naming conventions
+- Handles special cases (e.g., lateral sliding movements require leg label swapping)
+- Prepares files for integration
+
+**Important**: For lateral sliding movements (`deslizamiento_lateral`), the system automatically swaps right/left leg labels (`r_` ↔ `L_`, `l_` ↔ `R_`) to match the movement pattern.
+
+### Step 2: Create Participant JSON Configuration File
+
+After preprocessing, create a JSON file that relates force plate data to OpenCap video sessions. The movement names in the JSON **must exactly match** the trial names in OpenCap.
+
+**File Structure** (example: `participantes.json`):
+
+```json
+[
+    {
+        "participant_id": "P1",
+        "session_id": "opencap_session_id_here",
+        "movements": [
+            {
+                "move": "movement_name",
+                "link": "google_drive_url_or_empty"
+            },
+            {
+                "move": "movement_name_2",
+                "link": "google_drive_url_or_empty"
+            }
+        ]
+    },
+    {
+        "participant_id": "P2",
+        "session_id": "another_opencap_session_id",
+        "movements": [
+            {
+                "move": "movement_name",
+                "link": "google_drive_url_or_empty"
+            }
+        ]
+    }
+]
+```
+
+**Key Requirements**:
+- `participant_id`: Unique identifier for the participant
+- `session_id`: OpenCap session ID (found in OpenCap web interface)
+- `move`: **Must exactly match** the trial name in OpenCap
+- `link`: Google Drive URL for force plate data (can be empty if using local files)
+
+### Step 3: Configure and Execute Batch Processing
+
+1. Edit `scripts/batch_process_forceplates.py`:
+   - Update `name_file` variable to match your JSON filename (without `.json` extension)
+   - Configure movement classification sets (`unprocessed`, `bothlegs`) if needed
+
+2. Run the script:
+   ```bash
+   python scripts/batch_process_forceplates.py
+   ```
+
+3. The script will:
+   - Load participant data from the JSON file
+   - Download or load force plate data
+   - Download kinematic data from OpenCap (if not already present)
+   - Synchronize temporal and spatial coordinates
+   - Run inverse dynamics analysis in OpenSim
+   - Generate synchronization plots
+
+### Step 4: Access Synchronized Data
+
+After processing, synchronized data can be found in:
+
+```
+Data/
+└── {participant_id}/
+    ├── MeasuredForces/
+    │   └── {trial_name}/
+    │       └── {trial_name}_syncd_forces.mot
+    ├── OpenSimData/
+    │   ├── InverseDynamics/
+    │   │   └── {trial_name}/
+    │   └── Kinematics/
+    └── MarkerData/
+```
+
+## Integration Methods
+
+The system provides two integration methods depending on the movement type and available information:
+
+### Method 1: Single-Leg Integration
+**File**: `src/forceplates/funtion_integrate_forceplates_legs.py`  
+**Function**: `IntegrateForcepalte_legs()`
+
+**Use when**:
+- Only one foot contacts the force plate
+- You know which foot contacts the plate first
+- Movement is clearly unilateral (e.g., single-leg step-up, unilateral lunge)
+
+**Parameters**:
+- `legs`: Specify `'R'` for right leg or `'L'` for left leg
+
+**Example**:
+```python
+IntegrateForcepalte_legs(
+    session_id=session_id,
+    trial_name="step_up_right_1",
+    force_gdrive_url=force_url,
+    participant_id="P1",
+    legs='R'  # Specify the leg
+)
+```
+
+### Method 2: Both-Leg Integration (Auto-Detection)
+**File**: `src/forceplates/integrate_forceplates_both_legs.py`  
+**Function**: `IntegrateForcepalte_vc0()`
+
+**Use when**:
+- Both feet contact force plates simultaneously
+- You don't know which foot contacted first
+- Movement is bilateral (e.g., squats, jumps, bilateral lunges)
+
+**Features**:
+- Automatically detects which leg initiated contact first
+- Compares heel strike events from both legs
+- Uses combined force signals for synchronization
+
+**Example**:
+```python
+IntegrateForcepalte_vc0(
+    session_id=session_id,
+    trial_name="squat_90_1",
+    force_gdrive_url=force_url,
+    participant_id="P1"
+    # No leg parameter needed - auto-detected
+)
+```
+
+**Automatic Selection**: The batch processing script (`batch_process_forceplates.py`) automatically selects the appropriate method based on movement name patterns:
+- Movements with `'derecha'` or `'derecho'` → Single-leg (right)
+- Movements with `'izquierda'` or `'izquierdo'` → Single-leg (left)
+- Movements in `bothlegs` set (e.g., `'sentadilla'`) → Both-leg integration
+
+## Validation with Gold Standard
+
+To validate synchronization results against a gold standard system (e.g., Motive motion capture with hardware-synchronized force plates), use the validation scripts in the `src/validation/` folder.
+
+### Quick Validation Script
+**File**: `src/validation/autocode4val.py`
+
+This script processes multiple trials and compares OpenCap synchronized data with gold standard measurements.
+
+### Comprehensive Validation
+**File**: `src/validation/validation_sync.py`
+
+The `SyncValidator` class provides comprehensive validation including:
+- Temporal alignment comparison
+- Force signal correlation analysis
+- RMSE and MAE calculations
+- Visualization plots
+- Detailed validation reports
+
+**Usage Example**:
+```python
+from src.validation.validation_sync import SyncValidator
+
+validator = SyncValidator(
+    gold_standard_mot_path="path/to/gold_forces.mot",
+    gold_standard_trc_path="path/to/gold_markers.trc",
+    opencap_syncd_mot_path="Data/P1/MeasuredForces/trial1/trial1_syncd_forces.mot",
+    opencap_trc_path="Data/P1/MarkerData/trial1.trc",
+    output_folder="validation_results"
+)
+
+metrics = validator.run_validation()
+```
+
+## Output Files
+
+### Synchronized Force Data
+- **Location**: `Data/{participant_id}/MeasuredForces/{trial_name}/{trial_name}_syncd_forces.mot`
+- **Format**: OpenSim MOT file with synchronized force plate data
+- **Content**: Ground reaction forces, moments, and center of pressure for both legs
+
+### Inverse Dynamics Results
+- **Location**: `Data/{participant_id}/OpenSimData/InverseDynamics/{trial_name}/{trial_name}.sto`
+- **Format**: OpenSim STO file
+- **Content**: Joint moments and powers calculated from synchronized data
+
+### Synchronization Plots
+- **Location**: `graficas/{participant_id}/{trial_name}_corte.png`
+- **Content**: Visualization of heel position and synchronization point
+
+### Lag Times
+- **File**: `lag_times.json`
+- **Content**: Temporal offset values calculated for each trial
+- **Purpose**: Records synchronization parameters for reference
+
+## Project Structure
+
+```
+ForcePlateIntegration/
+├── scripts/
+│   └── batch_process_forceplates.py      # Main batch processing script
+├── src/
+│   ├── forceplates/
+│   │   ├── funtion_integrate_forceplates_legs.py    # Single-leg integration
+│   │   └── integrate_forceplates_both_legs.py      # Both-leg integration
+│   └── validation/
+│       ├── validation_sync.py            # Comprehensive validation
+│       └── autocode4val.py               # Quick validation script
+├── notebooks/
+│   └── plataformas_fuerza.ipynb          # Force plate preprocessing
+├── Data/                                  # Output directory
+└── README.md                              # This file
+```
+
+## Requirements
+
+See `requirements.txt` for complete dependency list. Key dependencies include:
+- numpy
+- pandas
+- matplotlib
+- scipy
+- opensim
+- requests
+
+## Notes
+
+- Movement names in the JSON configuration **must exactly match** OpenCap trial names
+- Force plate files should be preprocessed before integration
+- The system automatically handles coordinate system transformations
+- Spatial calibration aligns force vectors with anatomical markers
+- Temporal synchronization uses heel strike detection and cross-correlation
+
+## Support
+
+For issues or questions, please refer to the code documentation or contact the development team.
+
+---
+
+**Author**: ForcePlateIntegration Team

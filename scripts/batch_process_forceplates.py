@@ -16,7 +16,42 @@ import time
 
 
 # Configuration
-name_file = 'participantes4'
+# the files should be in the json format
+# the file should be named like this: 'participantes4.json'
+# the file should contain the following information:
+# [
+#     {
+#         "participant_id": "P1",
+#         "session_id": "session_id",
+#         "movements": [
+#             {
+#                 "move": "movement_name",
+#                 "link": "movement_link"
+#             },
+#             {
+#                 "move": "movement_name",
+#                 "link": "movement_link"
+#             },
+#         ]
+#     },    
+#     {
+#         "participant_id": "P2",
+#         "session_id": "session_id",
+#         "movements": [
+#             {
+#                 "move": "movement_name",
+#                 "link": "movement_link"
+#             },
+#             {
+#                 "move": "movement_name",
+#                 "link": "movement_link"
+#             },
+            
+#         ]
+#     },
+    
+# ]
+name_file = 'participantes'
 with open(f'{name_file}.json', 'r') as file:
     participantes = json.load(file)
 

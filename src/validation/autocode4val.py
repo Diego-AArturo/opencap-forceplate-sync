@@ -33,7 +33,7 @@ def process_movement(usuario, session_id, movimiento):
             es.append(error_msg)
 
 iniciar = time.time()
-session_id = "71a90d76-76e8-4f3d-9b73-7c7c4a98224f" 
+session_id = "session_id" 
 usuario = "P31T"
 print(f'sesion_id {session_id}, usuario {usuario}')
 for movimiento in moves:
