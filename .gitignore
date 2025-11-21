@@ -1,0 +1,53 @@
+__pycache__
+.env
+*.log
+*.ipynb_checkpoints
+Data/*
+**/Data/
+
+*DS_Store
+
+.vscode/*
+
+UtilsDynamicSimulations/OpenSimAD/build-ExpressionGraphF*
+UtilsDynamicSimulations/OpenSimAD/build-ExternalFunctionF*
+UtilsDynamicSimulations/OpenSimAD/install-ExternalFunctionF*
+UtilsDynamicSimulations/OpenSimAD/opensimAD-install/*
+
+# Carpetas de datos y resultados
+all_forces/
+data_bases/
+graficas/
+graficas_gfr/
+graficas_gfr_all/
+graficas_gfr_vs_rod/
+graficas_rod_gfr/
+images_graficas/
+tablas_af/
+resultados_fuerza/
+validation_results/
+Ariticulo/
+
+# Archivos grandes que no deben estar en el repo
+*.mat
+*.xlsx
+*.c3d
+*.png
+*.json
+
+# Excepciones: mantener algunos archivos importantes si es necesario
+# !readme.md
+# !requirements.txt
+
+# Entornos virtuales
+up_drive/.venv/
+.venv/
+venv/
+
+.python-version
+
+
+
+
+
+

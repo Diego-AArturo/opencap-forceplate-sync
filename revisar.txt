@@ -1,0 +1,4 @@
+toda participante 6
+p7 estocada desliz posterior izq ambas
+p8 estocada desliz lat derecho 2 y estocada desli posterior dere e izqu 1, estocada desli posterior izqu 2
+p8 estocada izq 1
