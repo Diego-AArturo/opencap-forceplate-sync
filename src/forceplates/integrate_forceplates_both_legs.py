@@ -87,7 +87,7 @@ def detect_upforce(signal, threshold_factor=0.1):
     return None
 
 
-def detect_interception(signal1, signal2, threshold=0.028, method='first'):
+def detect_interception(signal1, signal2, threshold=0.025, method='first'):
     """
     Detect the intersection (convergence) point between two signals of the same size.
     
@@ -102,7 +102,9 @@ def detect_interception(signal1, signal2, threshold=0.028, method='first'):
     """
     diff = np.abs(signal1 - signal2)
     close_idxs = np.where(diff < threshold)[0]
-
+    plt.plot(signal1, label='Signal 1')
+    plt.plot(signal2, label='Signal 2')
+    plt.show()
     if len(close_idxs) == 0:
         print("No intersection found under threshold.")
         return None
@@ -136,7 +138,7 @@ def detect_heel_strike(signal, signal2, threshold_factor=0.2, half_system=True):
         Index of heel strike impact, or None if not detected
     """
     if half_system:
-        half = int(len(signal) / 2)
+        half = int(len(signal) / 1)
         signal = medfilt(signal[:half], kernel_size=5)
         signal2 = signal2[:half]
     else:
@@ -500,14 +502,16 @@ def IntegrateForcepalte_vc0(session_id, trial_name, force_gdrive_url, participan
     # Apply temporal synchronization
     force_data_new = np.copy(force_data)
     force_data_new[:, 0] = force_data[:, 0] - lag_time
-
+    vs =True
     # Save synchronization plot
     if save_plot:
         save_folder = os.path.join("graficas", participant_id)
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, f"{trial_name}_corte.png")
+        save_path = os.path.join(save_folder, f"{trial_name}_corte_exey.png")
         
         plt.figure(figsize=(8, 5))
+        
+        plt.plot(force_data_new[:, 0],forces_for_cross_corr, label='vGRF (norm)')
         plt.plot(time_heel, pos_Rheel_y_filtered, label='RHeel')
         plt.plot(time_heel, pos_Lheel_y_filtered, label='LHeel')
         plt.axvline(
@@ -515,12 +519,63 @@ def IntegrateForcepalte_vc0(session_id, trial_name, force_gdrive_url, participan
             color='r', linestyle='--',
             label='Direction change'
         )
-        plt.title(f'Trial: {trial_name} | Participant: {participant_id}')
+        # plt.title(f'Trial: {trial_name} | Participant: {participant_id}')
         plt.xlabel('Time (s)')
+        plt.ylabel('Vertical heel position and vGRF\n(normalized 0–1)')
         plt.grid()
         plt.legend(loc='upper left', fontsize=8, frameon=True)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.close()
+        if vs:
+            save_path = os.path.join(save_folder, f"{trial_name}_comparison_sync_unsync.png")
+
+            
+            fig = plt.figure(figsize=(12,5))
+
+            ax1 = plt.subplot(1,2,1)
+            ax2 = plt.subplot(1,2,2)
+
+            # ================= PANEL A: UNSYNCHRONIZED =================
+            
+            ax1.plot(force_data[:, 0], forces_for_cross_corr, label='vGRF (Unsynchronized)')
+            ax1.plot(time_heel, pos_Rheel_y_filtered, label='RHeel')
+            ax1.plot(time_heel, pos_Lheel_y_filtered, label='LHeel')
+
+            ax1.set_title("Original signal (unsynchronized)", fontsize=12)
+            ax1.set_xlabel("Time (s)", fontsize=11)
+            ax1.set_ylim(0, 1.05)
+
+            ax1.grid(True, alpha=0.3)
+            ax1.legend(loc='upper left', fontsize=9, frameon=True)
+
+            ax1.text(-0.10, 1.05, "A", transform=ax1.transAxes,
+                    fontsize=14, fontweight='bold', va='top', ha='right')
+
+            # ================= PANEL B: SYNCHRONIZED =================
+            
+            ax2.plot(force_data_new[:, 0], forces_for_cross_corr, label='vGRF (Synchronized)')
+            ax2.plot(time_heel, pos_Rheel_y_filtered, label='RHeel')
+            ax2.plot(time_heel, pos_Lheel_y_filtered, label='LHeel')
+
+            ax2.set_title("Synchronized signal", fontsize=12)
+            ax2.set_xlabel("Time (s)", fontsize=11)
+            ax2.set_ylim(0, 1.05)
+
+            ax2.grid(True, alpha=0.3)
+            ax2.legend(loc='upper left', fontsize=9, frameon=True)
+
+            ax2.text(-0.10, 1.05, "B", transform=ax2.transAxes,
+                    fontsize=14, fontweight='bold', va='top', ha='right')
+
+            ax1.set_ylabel("")   # eliminar ylabel individual
+            ax2.set_ylabel("")
+
+            fig.supylabel("Vertical heel position and vGRF\n (normalized 0–1)", fontsize=12)
+            plt.tight_layout()
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.close()
+
+
 
     # Save synchronized force data
     force_folder = os.path.join(data_folder, 'MeasuredForces', trial_name)

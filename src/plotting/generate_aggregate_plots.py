@@ -543,7 +543,7 @@ class AggregatePlotGenerator:
         # Crear figura con dos subplots horizontales
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
         fig.suptitle(f'Correlation Gold Standard vs OpenCap - {squat_type}° Squat', 
-                     fontsize=14, fontweight='bold', y=0.98)
+                     fontsize=16, fontweight='bold', y=0.98)
         
         # ========== SUBPLOT 1: Todos los datos ==========
         # Scatter plot con todos los datos
@@ -570,10 +570,10 @@ class AggregatePlotGenerator:
         ax1.set_xlim(min_val - margin, max_val + margin)
         ax1.set_ylim(min_val - margin, max_val + margin)
         
-        ax1.set_xlabel('Gold Standard - Normalized Force [0-1]', fontsize=11, fontweight='bold')
-        ax1.set_ylabel('OpenCap - Normalized Force [0-1]', fontsize=11, fontweight='bold')
-        ax1.set_title('All Data', fontsize=12, fontweight='bold', pad=10)
-        ax1.legend(loc='lower right', fontsize=9)
+        ax1.set_xlabel('Gold Standard - Normalized Force [0-1]', fontsize=13, fontweight='bold')
+        ax1.set_ylabel('OpenCap - Normalized Force [0-1]', fontsize=13, fontweight='bold')
+        ax1.set_title('All Data', fontsize=14, fontweight='bold', pad=10)
+        ax1.legend(loc='lower right', fontsize=11)
         ax1.grid(True, alpha=0.3)
         
         # Estadísticas en el primer subplot
@@ -582,7 +582,7 @@ class AggregatePlotGenerator:
         textstr1 += f'n = {len(all_gold_full)} points\n'
         textstr1 += f'{len(correlations)} trials'
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.7, edgecolor='black')
-        ax1.text(0.02, 0.98, textstr1, transform=ax1.transAxes, fontsize=9,
+        ax1.text(0.02, 0.98, textstr1, transform=ax1.transAxes, fontsize=11,
                  verticalalignment='top', bbox=props, family='monospace')
         
         # ========== SUBPLOT 2: Zoom en región de mayor densidad (KDE) ==========
@@ -625,10 +625,10 @@ class AggregatePlotGenerator:
         ax2.set_xlim(zoom_min_x - zoom_margin_x, zoom_max_x + zoom_margin_x)
         ax2.set_ylim(zoom_min_y - zoom_margin_y, zoom_max_y + zoom_margin_y)
         
-        ax2.set_xlabel('Gold Standard - Normalized Force [0-1]', fontsize=11, fontweight='bold')
-        ax2.set_ylabel('OpenCap - Normalized Force [0-1]', fontsize=11, fontweight='bold')
-        ax2.set_title('Zoom: High Density Region (KDE Top 80%)', fontsize=12, fontweight='bold', pad=10)
-        ax2.legend(loc='lower right', fontsize=9)
+        ax2.set_xlabel('Gold Standard - Normalized Force [0-1]', fontsize=13, fontweight='bold')
+        ax2.set_ylabel('OpenCap - Normalized Force [0-1]', fontsize=13, fontweight='bold')
+        ax2.set_title('Zoom: High Density Region (KDE Top 80%)', fontsize=14, fontweight='bold', pad=10)
+        ax2.legend(loc='lower right', fontsize=11)
         ax2.grid(True, alpha=0.3)
         
         # Estadísticas en el segundo subplot
@@ -636,7 +636,7 @@ class AggregatePlotGenerator:
         textstr2 = f'r = {corr_zoom:.4f}\n'
         textstr2 += f'n = {len(gold_zoom)} points\n'
         textstr2 += f'Region: KDE Top 80%\ndensity'
-        ax2.text(0.02, 0.98, textstr2, transform=ax2.transAxes, fontsize=9,
+        ax2.text(0.02, 0.98, textstr2, transform=ax2.transAxes, fontsize=11,
                  verticalalignment='top', bbox=props, family='monospace')
         
         plt.tight_layout(rect=[0, 0, 1, 0.96])

@@ -659,7 +659,7 @@ def IntegrateForcepalte_legs(session_id, trial_name, force_gdrive_url, participa
     if save_plot:
         save_folder = os.path.join("graficas", participant_id)
         os.makedirs(save_folder, exist_ok=True)
-        save_path = os.path.join(save_folder, f"{trial_name}_corte.png")
+        save_path = os.path.join(save_folder, f"{trial_name}_corte_exey.png")
         
         plt.figure(figsize=(8, 5))
         plt.plot(time_heel, pos_Rheel_y_filtered, label='RHeel')
@@ -671,6 +671,7 @@ def IntegrateForcepalte_legs(session_id, trial_name, force_gdrive_url, participa
         )
         plt.title(f'Trial: {trial_name} | Participant: {participant_id}')
         plt.xlabel('Time (s)')
+        plt.ylabel('Vertical heel position and vGRF\n(normalized 0–1)')
         plt.grid()
         plt.legend(loc='upper left', fontsize=8, frameon=True)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')

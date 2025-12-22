@@ -312,8 +312,7 @@ class SyncValidator:
         """
         Calculate validation metrics between gold standard and OpenCap.
         
-        Force signals are normalized to [0, 1] to validate synchronization and shape,
-        independent of absolute force magnitude.
+        
         
         Args:
             gold_df: Gold standard force DataFrame (with time_percent column)
