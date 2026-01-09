@@ -577,9 +577,9 @@ class AggregatePlotGenerator:
         ax1.grid(True, alpha=0.3)
         
         # Estadísticas en el primer subplot
-        textstr1 = f'r = {global_corr:.4f} (p < 0.001)\n'
+        textstr1 = f'r = {global_corr:.4f} (p‑value < 0.001)\n'
         textstr1 += f'Mean r = {avg_corr:.4f}\n'
-        textstr1 += f'n = {len(all_gold_full)} points\n'
+        # textstr1 += f'n = {len(all_gold_full)} points\n'
         textstr1 += f'{len(correlations)} trials'
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.7, edgecolor='black')
         ax1.text(0.02, 0.98, textstr1, transform=ax1.transAxes, fontsize=11,
@@ -634,7 +634,7 @@ class AggregatePlotGenerator:
         # Estadísticas en el segundo subplot
         corr_zoom, _ = pearsonr(gold_zoom, opencap_zoom)
         textstr2 = f'r = {corr_zoom:.4f}\n'
-        textstr2 += f'n = {len(gold_zoom)} points\n'
+        # textstr2 += f'n = {len(gold_zoom)} points\n'
         textstr2 += f'Region: KDE Top 80%\ndensity'
         ax2.text(0.02, 0.98, textstr2, transform=ax2.transAxes, fontsize=11,
                  verticalalignment='top', bbox=props, family='monospace')
